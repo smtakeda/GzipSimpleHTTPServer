@@ -99,13 +99,15 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         fs = os.fstat(f.fileno())
         raw_content_length = fs[6]
         content = f.read();
-        content = gzipencode(content)
-        compressed_content_length = len(content)
+        gzipped_content = ''
+        for line in content.split('\n'):
+            gzipped_content += gzipencode(line+"\n")
+        compressed_content_length = len(gzipped_content)
         f.close()
         self.send_header("Content-Length", max(raw_content_length, compressed_content_length))
         self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
         self.end_headers()
-        return content
+        return gzipped_content
 
     def list_directory(self, path):
         """Helper to produce a directory listing (absent index.html).
